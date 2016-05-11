@@ -42,7 +42,7 @@ public class ResultsRecycleViewAdapter extends RecyclerView.Adapter<RecyclerView
 		bindProposalView((ProposalViewHolder) viewHolder, position);
 	}
 
-	private void bindProposalView(final ProposalViewHolder viewHolder, int position) {
+	private void bindProposalView(final ProposalViewHolder viewHolder, final int position) {
 		ResultsItemView itemView = viewHolder.resultsItemView;
 		itemView.setProposal(getItem(position), context, isComplexSearch);
 		itemView.setAlternativePrice(getItem(position).getTotalWithFilters());
@@ -50,8 +50,7 @@ public class ResultsRecycleViewAdapter extends RecyclerView.Adapter<RecyclerView
 			@Override
 			public void onClick(View view) {
 				if (listener != null) {
-					int adapterPosition = viewHolder.getAdapterPosition();
-					listener.onClick(getItem(adapterPosition), adapterPosition);
+					listener.onClick(getItem(position), position);
 				}
 			}
 		});

@@ -21,18 +21,18 @@ android {
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
 
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            repository(url: uploadUrl) {
-                authentication(userName: mavenUser, password: mavenPassword)
-            }
-            pom.version = "1.0"
-            pom.artifactId = "adsinterface"
-            pom.groupId = "ru.aviasales"
-        }
-    }
-}
+//uploadArchives {
+//    repositories {
+//        mavenDeployer {
+//            repository(url: uploadUrl) {
+//                authentication(userName: mavenUser, password: mavenPassword)
+//            }
+//            pom.version = "1.0"
+//            pom.artifactId = "adsinterface"
+//            pom.groupId = "ru.aviasales"
+//        }
+//    }
+//}
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])

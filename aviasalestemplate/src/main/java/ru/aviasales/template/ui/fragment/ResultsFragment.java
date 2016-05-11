@@ -19,6 +19,7 @@ import java.util.List;
 
 import ru.aviasales.adsinterface.AdsInterface;
 import ru.aviasales.core.AviasalesSDK;
+import ru.aviasales.core.ads.AdsManager;
 import ru.aviasales.core.search.object.Proposal;
 import ru.aviasales.core.search.object.SearchData;
 import ru.aviasales.core.search.params.SearchParams;
@@ -31,6 +32,7 @@ import ru.aviasales.template.ui.adapter.AdAdapter;
 import ru.aviasales.template.ui.adapter.ResultsRecycleViewAdapter;
 import ru.aviasales.template.ui.dialog.CurrencyFragmentDialog;
 import ru.aviasales.template.ui.dialog.ResultsSortingDialog;
+import ru.aviasales.template.utils.BrowserUtils;
 import ru.aviasales.template.utils.CurrencyUtils;
 import ru.aviasales.template.utils.SortUtils;
 import ru.aviasales.template.utils.StringUtils;
@@ -99,14 +101,11 @@ public class ResultsFragment extends BaseFragment {
 
 	private void setUpListView(RecyclerView listView) {
 
-		final ResultsRecycleViewAdapter adapter = createOrRefreshAdapter();
-		adAdapter = new AdAdapter(adapter);
-		AdsInterface adsInterface = AdsImplKeeper.getInstance().getAdsInterface();
-		adAdapter.setShouldShowAdBanner(adsInterface.isResultsAdsEnabled() && adsInterface.areResultsReadyToShow());
-
+		final ResultsRecycleViewAdapter proposalsAdapter = createOrRefreshAdapter();
+		adAdapter = createAdAdapter(proposalsAdapter);
 		listView.setAdapter(adAdapter);
 
-		adapter.setListener(new ResultsRecycleViewAdapter.OnClickListener() {
+		proposalsAdapter.setListener(new ResultsRecycleViewAdapter.OnClickListener() {
 			@Override
 			public void onClick(final Proposal proposal, int position) {
 				if (getActivity() == null) return;
@@ -114,7 +113,22 @@ public class ResultsFragment extends BaseFragment {
 				showDetails(proposal);
 			}
 		});
-		adapter.sortProposals(SortUtils.getSavedSortingType());
+		proposalsAdapter.sortProposals(SortUtils.getSavedSortingType());
+	}
+
+	private AdAdapter createAdAdapter(ResultsRecycleViewAdapter adapter) {
+		AdAdapter adAdapter = new AdAdapter(adapter, new AdsManager.AdListener() {
+			@Override
+			public void onAdBannerPressed() {
+				AdsManager instance = AdsManager.getInstance();
+				BrowserUtils.onOpenBrowser(getActivity(), instance.getFullAdsUrl(), instance.getResultsAdsBrowserTitle(), false);
+			}
+		});
+		AdsInterface adsInterface = AdsImplKeeper.getInstance().getAdsInterface();
+		adAdapter.setShouldShowAppodealAdBanner(adsInterface.isResultsAdsEnabled() && adsInterface.areResultsReadyToShow());
+		AdsManager adsManager = AdsManager.getInstance();
+		adAdapter.setShouldShowAsBanner(adsManager.needToShowAdsOnResults() && adsManager.isWebViewLoaded());
+		return adAdapter;
 	}
 
 	private ResultsRecycleViewAdapter createOrRefreshAdapter() {
@@ -270,5 +284,4 @@ public class ResultsFragment extends BaseFragment {
 			resultsCount = resultsAdapter.getItemCount();
 		}
 	}
-
 }

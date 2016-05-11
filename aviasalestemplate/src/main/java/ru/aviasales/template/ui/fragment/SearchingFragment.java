@@ -16,6 +16,8 @@ import com.nineoldandroids.animation.Animator;
 import com.nineoldandroids.animation.AnimatorListenerAdapter;
 import com.nineoldandroids.animation.ValueAnimator;
 
+import java.util.Map;
+
 import ru.aviasales.adsinterface.AdsInterface;
 import ru.aviasales.core.AviasalesSDK;
 import ru.aviasales.core.http.exception.ApiExceptions;
@@ -94,6 +96,16 @@ public class SearchingFragment extends BaseFragment {
 
 					@Override
 					public void onCanceled() {
+
+					}
+
+					@Override
+					public void onMagicFareLoaded(SearchData searchData, boolean b) {
+
+					}
+
+					@Override
+					public void onTicketCountChanged(int i, int i1, Map<String, Double> map, boolean b) {
 
 					}
 

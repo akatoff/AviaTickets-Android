@@ -20,7 +20,6 @@ android {
 	repositories {
 		mavenCentral()
 		maven { url 'http://android.aviasales.ru/repositories/' }
-
 	}
 }
 
@@ -29,6 +28,5 @@ dependencies {
 	testCompile 'junit:junit:4.12'
 	compile 'com.android.support:appcompat-v7:23.1.1'
 	compile 'com.android.support:design:23.1.1'
-//	compile 'ru.aviasales.template:aviasalesSdkTemplate:2.1.1-sdk'
-	compile project(":aviasalestemplate")
+	compile 'ru.aviasales.template:aviasalesSdkTemplate:2.1.2-sdk'
 }

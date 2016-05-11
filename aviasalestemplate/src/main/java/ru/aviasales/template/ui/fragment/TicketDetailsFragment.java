@@ -2,8 +2,6 @@ package ru.aviasales.template.ui.fragment;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -26,12 +24,12 @@ import ru.aviasales.core.search.object.Proposal;
 import ru.aviasales.core.search.object.SearchData;
 import ru.aviasales.core.search.params.SearchParams;
 import ru.aviasales.core.search.searching.SimpleSearchListener;
-import ru.aviasales.template.BrowserActivity;
 import ru.aviasales.template.R;
 import ru.aviasales.template.proposal.ProposalManager;
 import ru.aviasales.template.ui.dialog.ProgressDialogWindow;
 import ru.aviasales.template.ui.view.AgencySpinner;
 import ru.aviasales.template.ui.view.TicketView;
+import ru.aviasales.template.utils.BrowserUtils;
 import ru.aviasales.template.utils.CurrencyUtils;
 import ru.aviasales.template.utils.DateUtils;
 import ru.aviasales.template.utils.StringUtils;
@@ -45,7 +43,53 @@ public class TicketDetailsFragment extends BaseFragment {
 	private Proposal proposalData;
 
 	private AlertDialog updateDialog;
+	private BuyProcessListener listener = new BuyProcessListener() {
+		@Override
+		public void onSuccess(BuyData data, String gateKey) {
+			dismissDialog();
+			if (getActivity() == null) {
+				return;
+			}
 
+			String url = data.generateBuyUrl();
+			if (url == null) {
+				Toast.makeText(getActivity(), R.string.agency_adapter_server_error, Toast.LENGTH_SHORT).show();
+			} else {
+				if (getActivity() != null) {
+					openBrowser(url, gateKey);
+				}
+			}
+		}
+
+		@Override
+		public void onError(int errorCode) {
+			dismissDialog();
+			if (getActivity() == null) {
+				return;
+			}
+			switch (errorCode) {
+				case ApiExceptions.API_EXCEPTION:
+					Toast.makeText(getActivity(), getResources().getText(R.string.toast_error_api), Toast.LENGTH_SHORT).show();
+					break;
+				case ApiExceptions.CONNECTION_EXCEPTION:
+					Toast.makeText(getActivity(), getResources().getText(R.string.toast_error_connection), Toast.LENGTH_SHORT).show();
+					break;
+				case ApiExceptions.UNKNOWN_EXCEPTION:
+				default:
+					Toast.makeText(getActivity(), getResources().getText(R.string.toast_error_unknown), Toast.LENGTH_SHORT).show();
+					break;
+			}
+		}
+
+		@Override
+		public void onCanceled() {
+			dismissDialog();
+		}
+	};
+
+	public static TicketDetailsFragment newInstance() {
+		return new TicketDetailsFragment();
+	}
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -54,14 +98,9 @@ public class TicketDetailsFragment extends BaseFragment {
 		setHasOptionsMenu(true);
 	}
 
-	public static TicketDetailsFragment newInstance() {
-		return new TicketDetailsFragment();
-	}
-
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		ViewGroup layout = (ViewGroup) inflater.inflate(R.layout.ticket_fragment, container, false);
-
 
 		proposalData = getProposalData();
 
@@ -69,7 +108,6 @@ public class TicketDetailsFragment extends BaseFragment {
 
 		return layout;
 	}
-
 
 	private void setUpAgencySpinner(ViewGroup layout) {
 		AgencySpinner agencySpinner = (AgencySpinner) layout.findViewById(R.id.agency_spinner);
@@ -93,10 +131,6 @@ public class TicketDetailsFragment extends BaseFragment {
 			});
 		}
 
-	}
-
-	public interface OnAgencySelected {
-		void onClick(View view, boolean isAdditional);
 	}
 
 	private void setUpViews(ViewGroup layout) {
@@ -182,7 +216,7 @@ public class TicketDetailsFragment extends BaseFragment {
 	}
 
 	protected void openBrowser(String url, String gateKey) {
-		onOpenBrowser(url, getAgencyName(gateKey));
+		BrowserUtils.onOpenBrowser(getActivity(), url, String.format(getString(R.string.browser_title), getAgencyName(gateKey)), true);
 	}
 
 	private boolean checkTimeAndShowDialogIfNeed() {
@@ -297,73 +331,6 @@ public class TicketDetailsFragment extends BaseFragment {
 		}
 	}
 
-	private BuyProcessListener listener = new BuyProcessListener() {
-		@Override
-		public void onSuccess(BuyData data, String gateKey) {
-			dismissDialog();
-			if (getActivity() == null) {
-				return;
-			}
-
-			String url = data.generateBuyUrl();
-			if (url == null) {
-				Toast.makeText(getActivity(), R.string.agency_adapter_server_error, Toast.LENGTH_SHORT).show();
-			} else {
-				if (getActivity() != null) {
-					openBrowser(url, gateKey);
-				}
-			}
-		}
-
-		@Override
-		public void onError(int errorCode) {
-			dismissDialog();
-			if (getActivity() == null) {
-				return;
-			}
-			switch (errorCode) {
-				case ApiExceptions.API_EXCEPTION:
-					Toast.makeText(getActivity(), getResources().getText(R.string.toast_error_api), Toast.LENGTH_SHORT).show();
-					break;
-				case ApiExceptions.CONNECTION_EXCEPTION:
-					Toast.makeText(getActivity(), getResources().getText(R.string.toast_error_connection), Toast.LENGTH_SHORT).show();
-					break;
-				case ApiExceptions.UNKNOWN_EXCEPTION:
-				default:
-					Toast.makeText(getActivity(), getResources().getText(R.string.toast_error_unknown), Toast.LENGTH_SHORT).show();
-					break;
-			}
-		}
-
-		@Override
-		public void onCanceled() {
-			dismissDialog();
-		}
-	};
-
-
-	private void onOpenBrowser(String url, String agency) {
-		if (getActivity() == null || url == null || agency == null) return;
-
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-			Utils.getPreferences(getActivity())
-					.edit()
-					.putString(BrowserFragment.PROPERTY_BUY_URL, url)
-					.putString(BrowserFragment.PROPERTY_BUY_AGENCY, agency)
-					.commit();
-			launchInternalBrowser();
-		} else {
-			Intent intent = new Intent(Intent.ACTION_VIEW);
-			intent.setData(Uri.parse(url));
-			getActivity().startActivity(intent);
-		}
-	}
-
-	private void launchInternalBrowser() {
-		Intent intent = new Intent(getActivity(), BrowserActivity.class);
-		getActivity().startActivity(intent);
-	}
-
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
 
@@ -374,6 +341,10 @@ public class TicketDetailsFragment extends BaseFragment {
 		}
 
 		super.onSaveInstanceState(outState);
+	}
+
+	public interface OnAgencySelected {
+		void onClick(View view, boolean isAdditional);
 	}
 
 }

@@ -33,30 +33,35 @@ import ru.aviasales.template.ui.dialog.BrowserLoadingDialogFragment;
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 public class BrowserFragment extends BaseFragment {
 
-	public static final String PROPERTY_BUY_URL = "BUY_URL";
-	public static final String PROPERTY_BUY_AGENCY = "BUY_AGENCY";
+	public static final String URL = "BROWSER_URL";
+	public static final String TITLE = "BROWSER_TITLE";
 
 	private boolean needToDismissDialog = false;
 	private WebView webView;
 	private WebView secondaryWebView;
 
 	private BrowserLoadingDialogFragment dialog;
-	private String agency;
+	private String title;
 	private boolean loadingFinished = false;
 	private MenuItem btnBack;
 	private MenuItem btnForward;
 	private ProgressBar progressbar;
 	private FrameLayout webViewPlaceHolder;
+	private boolean showLoadingDialog = false;
 
 	public static BrowserFragment newInstance() {
+		return newInstance(false);
+	}
+
+	public static BrowserFragment newInstance(boolean showLoadingDialog) {
 		BrowserFragment browserFragment = new BrowserFragment();
-		Bundle bundle = new Bundle();
+		browserFragment.setShowLoadingDialog(showLoadingDialog);
 		return browserFragment;
 	}
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-		agency = getPreferences().getString(PROPERTY_BUY_AGENCY, null);
+		title = getPreferences().getString(TITLE, null);
 
 		super.onCreate(savedInstanceState);
 
@@ -72,7 +77,7 @@ public class BrowserFragment extends BaseFragment {
 		setupViews(layout);
 
 		getActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_TITLE);
-		setTextToActionBar(String.format(getString(R.string.browser_title), agency));
+		setTextToActionBar(title);
 
 		return layout;
 	}
@@ -82,8 +87,12 @@ public class BrowserFragment extends BaseFragment {
 		progressbar = (ProgressBar) layout.findViewById(R.id.progressbar);
 		progressbar.setAlpha(0);
 
-		String url = getPreferences().getString(PROPERTY_BUY_URL, null);
+		String url = getPreferences().getString(URL, null);
 		setupWebView(webViewPlaceHolder, url);
+	}
+
+	public void setShowLoadingDialog(boolean showLoadingDialog) {
+		this.showLoadingDialog = showLoadingDialog;
 	}
 
 	@SuppressLint("SetJavaScriptEnabled")
@@ -186,8 +195,7 @@ public class BrowserFragment extends BaseFragment {
 	}
 
 	private void showLoadingDialog() {
-		if (getActivity() == null
-				|| getActivity().isFinishing()) {
+		if (!showLoadingDialog || getActivity() == null || getActivity().isFinishing()) {
 			return;
 		}
 		if (dialog != null) {
@@ -201,7 +209,7 @@ public class BrowserFragment extends BaseFragment {
 			FragmentManager fm = getActivity().getFragmentManager();
 			dialog = new BrowserLoadingDialogFragment();
 			dialog.setCancelable(false);
-			dialog.setAgency(agency);
+			dialog.setAgency(title);
 			dialog.show(fm, "browser_dialog");
 		}
 
@@ -251,29 +259,6 @@ public class BrowserFragment extends BaseFragment {
 		}
 	}
 
-	private class AsWebViewClient extends WebViewClient {
-
-		@Override
-		public boolean shouldOverrideUrlLoading(WebView view, String url) {
-			return false;
-		}
-
-		@Override
-		public void onPageStarted(WebView view, String url, Bitmap favicon) {
-			super.onPageStarted(view, url, favicon);
-			setBrowserNav();
-		}
-
-		@Override
-		public void onPageFinished(WebView view, String url) {
-			super.onPageFinished(view, url);
-			loadingFinished = true;
-
-			dismissDialogFragment();
-			setBrowserNav();
-		}
-	}
-
 	private void setBrowserNav() {
 		if (webView != null && btnBack != null && btnForward != null) {
 			btnBack.setEnabled(webView.canGoBack());
@@ -309,6 +294,29 @@ public class BrowserFragment extends BaseFragment {
 			return true;
 		} else {
 			return super.onOptionsItemSelected(item);
+		}
+	}
+
+	private class AsWebViewClient extends WebViewClient {
+
+		@Override
+		public boolean shouldOverrideUrlLoading(WebView view, String url) {
+			return false;
+		}
+
+		@Override
+		public void onPageStarted(WebView view, String url, Bitmap favicon) {
+			super.onPageStarted(view, url, favicon);
+			setBrowserNav();
+		}
+
+		@Override
+		public void onPageFinished(WebView view, String url) {
+			super.onPageFinished(view, url);
+			loadingFinished = true;
+
+			dismissDialogFragment();
+			setBrowserNav();
 		}
 	}
 }

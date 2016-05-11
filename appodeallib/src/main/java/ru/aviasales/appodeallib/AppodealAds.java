@@ -21,24 +21,7 @@ public class AppodealAds implements AdsInterface {
 
 	public void init(Activity activity, String appKey) {
 		setUpAppodeal(activity);
-		Appodeal.confirm(Appodeal.SKIPPABLE_VIDEO);
-		Appodeal.setTesting(true);
-		Appodeal.initialize(activity, appKey, Appodeal.NATIVE | Appodeal.MREC | Appodeal.SKIPPABLE_VIDEO | Appodeal.INTERSTITIAL);
-	}
-
-	@Override
-	public void setStartAdsEnabled(boolean startAdsEnabled) {
-		this.startAdsEnabled = startAdsEnabled;
-	}
-
-	@Override
-	public void setWaitingScreenAdsEnabled(boolean waitingScreenAdsEnabled) {
-		this.waitingScreenAdsEnabled = waitingScreenAdsEnabled;
-	}
-
-	@Override
-	public void setResultsAdsEnabled(boolean resultsAdsEnabled) {
-		this.resultsAdsEnabled = resultsAdsEnabled;
+		Appodeal.initialize(activity, appKey, Appodeal.NATIVE | Appodeal.MREC | Appodeal.NON_SKIPPABLE_VIDEO | Appodeal.INTERSTITIAL);
 	}
 
 	private void setUpAppodeal(Activity activity) {
@@ -56,8 +39,12 @@ public class AppodealAds implements AdsInterface {
 	@Override
 	public void showStartAdsIfAvailable(final Activity activity) {
 		if (startAdsEnabled) {
-			if (Appodeal.isLoaded(Appodeal.SKIPPABLE_VIDEO) || Appodeal.isLoaded(Appodeal.INTERSTITIAL)) {
-				Appodeal.show(activity, Appodeal.SKIPPABLE_VIDEO | Appodeal.INTERSTITIAL);
+			if (Appodeal.isLoaded(Appodeal.NON_SKIPPABLE_VIDEO) && Appodeal.isLoaded(Appodeal.INTERSTITIAL)) {
+				Appodeal.show(activity, Appodeal.NON_SKIPPABLE_VIDEO | Appodeal.INTERSTITIAL);
+			} else if (Appodeal.isLoaded(Appodeal.NON_SKIPPABLE_VIDEO) && !Appodeal.isLoaded(Appodeal.INTERSTITIAL)) {
+				Appodeal.show(activity, Appodeal.NON_SKIPPABLE_VIDEO);
+			} else if (!Appodeal.isLoaded(Appodeal.NON_SKIPPABLE_VIDEO) && Appodeal.isLoaded(Appodeal.INTERSTITIAL)) {
+				Appodeal.show(activity, Appodeal.INTERSTITIAL);
 			} else {
 				Appodeal.setInterstitialCallbacks(new InterstitialCallbacksAdapter() {
 					@Override
@@ -99,13 +86,28 @@ public class AppodealAds implements AdsInterface {
 	}
 
 	@Override
+	public void setStartAdsEnabled(boolean startAdsEnabled) {
+		this.startAdsEnabled = startAdsEnabled;
+	}
+
+	@Override
 	public boolean isWaitingScreenAdsEnabled() {
 		return waitingScreenAdsEnabled;
 	}
 
 	@Override
+	public void setWaitingScreenAdsEnabled(boolean waitingScreenAdsEnabled) {
+		this.waitingScreenAdsEnabled = waitingScreenAdsEnabled;
+	}
+
+	@Override
 	public boolean isResultsAdsEnabled() {
 		return resultsAdsEnabled;
+	}
+
+	@Override
+	public void setResultsAdsEnabled(boolean resultsAdsEnabled) {
+		this.resultsAdsEnabled = resultsAdsEnabled;
 	}
 
 	@Override

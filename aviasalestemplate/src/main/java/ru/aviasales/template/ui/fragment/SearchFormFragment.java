@@ -16,6 +16,7 @@ import java.util.Date;
 
 import ru.aviasales.core.AviasalesSDK;
 import ru.aviasales.core.search.params.Passengers;
+import ru.aviasales.core.search.params.SearchParams;
 import ru.aviasales.core.search.searching.SimpleSearchListener;
 import ru.aviasales.template.R;
 import ru.aviasales.template.ui.dialog.DatePickerDialogFragment;
@@ -28,6 +29,7 @@ import ru.aviasales.template.ui.model.SimpleSearchParams;
 import ru.aviasales.template.ui.view.ComplexSearchFormView;
 import ru.aviasales.template.ui.view.SearchFormPassengersButton;
 import ru.aviasales.template.ui.view.SimpleSearchFormView;
+import ru.aviasales.template.utils.CurrencyUtils;
 import ru.aviasales.template.utils.DateUtils;
 import ru.aviasales.template.utils.Utils;
 
@@ -143,11 +145,13 @@ public class SearchFormFragment extends BaseFragment implements SimpleSearchForm
 					return;
 				}
 
-				AviasalesSDK.getInstance().startTicketsSearch(searchFormData.createSearchParams(isComplexSearchSelected), new SimpleSearchListener() {
+				SearchParams searchParams = searchFormData.createSearchParams(isComplexSearchSelected);
+				AviasalesSDK aviasalesSDK = AviasalesSDK.getInstance();
+				aviasalesSDK.prepareResultsAds(searchParams, CurrencyUtils.getAppCurrency(getActivity()));
+				aviasalesSDK.startTicketsSearch(searchParams, new SimpleSearchListener() {
 
 				});
 				startFragment(SearchingFragment.newInstance(), true);
-
 			}
 		});
 

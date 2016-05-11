@@ -1,5 +1,6 @@
 package ru.aviasales.template;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -8,6 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import ru.aviasales.template.ui.fragment.BrowserFragment;
 
 public class BrowserActivity extends AppCompatActivity {
+	public static final String SHOW_LOADING_DIALOG = "show_loading_dialog";
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -18,9 +20,13 @@ public class BrowserActivity extends AppCompatActivity {
 
 	private void initFragment() {
 		FragmentManager fm = getSupportFragmentManager();
-
 		FragmentTransaction fragmentTransaction = fm.beginTransaction();
-		fragmentTransaction.replace(R.id.fragment_child_place, BrowserFragment.newInstance(), null);
+		fragmentTransaction.replace(R.id.fragment_child_place, BrowserFragment.newInstance(needToShowLoadingDialog()), null);
 		fragmentTransaction.commit();
+	}
+
+	private boolean needToShowLoadingDialog() {
+		Intent intent = getIntent();
+		return intent != null && intent.getExtras() != null && intent.getExtras().getBoolean(SHOW_LOADING_DIALOG, false);
 	}
 }
